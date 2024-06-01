@@ -3,10 +3,12 @@ import sqlite3
 import os
 from pathlib import Path
 from typing import List
+from models import User
 
 from utils import get_directory, escape_quotes
 
 from instagrapi import Client
+from instagrapi.types import Location
 
 class Database():
     def __init__(self, database_file: str) -> None:
@@ -34,6 +36,33 @@ class Database():
         self.cursor.execute(COMMAND)
         self.db_connection.commit()
 
+    def fetchall_from_user_table(self):
+        COMMAND = f"""
+            SELECT * FROM "main"."USER";
+        """
+        result = self.cursor.execute(COMMAND)
+        return result
+
+    def insert_into_location_table(self, location: Location):
+        try:
+            COMMAND = f"""
+                INSERT INTO "main"."LOCATIONS" 
+                ("id", "name", "address", "latitude", "longitude")
+                VALUES (
+                    '{str(location.pk)}',
+                    '{escape_quotes(location.name)}',
+                    '{escape_quotes(location.address)}',
+                    {float(location.lat)},
+                    {float(location.lng)}
+                )
+                ON CONFLICT(id) DO NOTHING;
+            """
+            print(COMMAND)
+            self.cursor.execute(COMMAND)
+            self.db_connection.commit()
+        except Exception as e:
+            print("Skipping adding to location table due to issue: e")
+
     def insert_into_post_table(self, post):
 
         COMMAND = f"""
@@ -47,7 +76,7 @@ class Database():
                         '{post.get("like_count")}',
                         '{escape_quotes(str(post.get("caption_text")))}',
                         '{str(post.get('media_path'))}',
-                        '{str(post.get('title'))}'
+                        '{escape_quotes(str(post.get('title')))}'
                     )
                         
                     ON CONFLICT(post_id) DO NOTHING;
@@ -100,7 +129,7 @@ class Instagram():
         self.posts = dict()
 
 
-    def get_friends(self, limit=0) -> List[dict]:
+    def get_friends(self, limit=0, from_database=False) -> List[dict]:
         """
         Get a list of friends.
 
@@ -111,18 +140,25 @@ class Instagram():
         Returns:
             List[User]
         """
+
+        if from_database:
+            response = self.database.fetchall_from_user_table()
+            self.following = list()
+            for row in response:
+                self.following.append(User(**{k:v for k, v in zip(User.model_fields.keys(), list(row))}))
+            return self.following
+    
         account_info = self.client.account_info()
         users_following = self.client.user_following_v1(account_info.pk, amount=limit)
-        self.following = list()
         for user_following in users_following:
             user = self.client.user_info(user_following.pk)
             dp_path = self.database.save_media(user.profile_pic_url_hd, user.username, "profile_picture")
             user = user.__dict__
             user.update({"profile_pic": dp_path})
-            self.following.append(user)
             self.database.insert_into_user_table(user)
 
-        return self.following
+        return self.get_friends(from_database=True)
+
     
     def get_user_posts(self, user, limit=0):
         """
@@ -136,19 +172,22 @@ class Instagram():
             List[Post]
         """
 
-        posts = self.client.user_medias_v1(user.get('pk'), amount=limit)
-        username = user.get('username')
+        posts = self.client.user_medias_v1(user.id, amount=limit)
+        username = user.username
         self.posts[username] = list()
         for post in posts:
             try:
                 media_path = str(self.database.save_media(post.thumbnail_url, username, post.pk))
             except Exception as e:
                 media_path = f"storage/{username}/{post.pk}"
+
+            
             for sno, resource in enumerate(post.resources):
                 self.database.save_media(resource.thumbnail_url, username, f"{post.pk}_{sno}")
 
+            post.location = self.database.insert_into_location_table(post.location) if post.location else None
             post = post.__dict__
-            post.update({"user_pk": user.get('pk')})
+            post.update({"user_pk": user.id})
             post.update({"media_path": media_path})
 
             self.database.insert_into_post_table(post)
@@ -182,11 +221,15 @@ def main():
     insta = Instagram(database_file, session_data)
 
     # Fetch friends list from Instagram and limit to 1 friend
-    friends = insta.get_friends(1)
+    friends = insta.get_friends(from_database=True)
+    print(friends)
+    # for friend in friends:
+    #     insta.get_user_posts(friend, limit=5)
+    #     print(friend)
 
     # For each friend, fetch their posts and limit to 5 posts
-    for friend in friends:
-        insta.get_user_posts(friend, 5)
+    for friend in friends[:30]:
+        insta.get_user_posts(friend)
 
 if __name__ == '__main__':
     main()
