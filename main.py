@@ -42,8 +42,7 @@ for user in following_dict.values():
     posts = cl.user_medias_v1(user.pk, 20)
     for post in posts:
         if post.thumbnail_url is not None:
-            image_path = str(folder_path) + "/" + str(post.pk)
-            cl.photo_download_by_url(post.thumbnail_url, str(post.pk), folder_path)
+            image_path = str(cl.photo_download_by_url(post.thumbnail_url, str(post.pk), folder_path))
             insert = f"""
                             INSERT INTO "main"."POSTS" ("post_id", "media", "timestamp", "user_id")
                             VALUES ('{str(post.pk)}', '{image_path}', '{post.taken_at}', '{str(user.pk)}')
@@ -53,8 +52,7 @@ for user in following_dict.values():
             con.commit()
         else:
             for resource in post.resources:
-                image_path = str(folder_path) + "/" + str(resource.pk)
-                cl.photo_download_by_url(resource.thumbnail_url, str(resource.pk), folder_path)
+                image_path = str(cl.photo_download_by_url(resource.thumbnail_url, str(resource.pk), folder_path))
                 insert = f"""
                     INSERT INTO "main"."POSTS" ("post_id", "media", "timestamp", "user_id")
                     VALUES ('{str(resource.pk)}', '{image_path}', '{post.taken_at}', '{str(user.pk)}')
