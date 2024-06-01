@@ -3,7 +3,7 @@ import json
 import sqlite3
 from pathlib import Path
 
-con = sqlite3.connect('/Users/narendranathchoudharygogineni/Downloads/karani.db')
+con = sqlite3.connect('karani.db')
 cur = con.cursor()
 cl = Client(json.load(open('session.json')))
 # cl.login("naren.alt", "Saapa1@2")
