@@ -13,7 +13,7 @@ def get_matching_users(user_name: str):
     connec = sqlite3.connect('karani.db')
     cursor = connec.cursor()
     query = f"""
-    SELECT * FROM USER WHERE username LIKE '%{user_name}%';
+    SELECT * FROM USER WHERE username LIKE '%{user_name}%' or full_name LIKE '%{user_name}%';
     """
     cursor.execute(query)
     rows = cursor.fetchall()
@@ -72,7 +72,7 @@ def get_matching_posts_with_tagged_users(user_id: str, time: str = "-7 days"):
 
 
 def summarize(big_string: str, query: str):
-    res = sumarize_agent.sessions.chat(
+    res = summarize_agent.sessions.chat(
         session_id=summarize_session.id,
         messages=[
             {
@@ -184,7 +184,7 @@ TOOLS = [
 
 INSTRUCTIONS = [
     "If you want to get user_id for a user name, invoke get_matching_users with the user name",
-    "Keep using the tools till you get to the answer",
+    "After getting the user_id get the relevant posts for the user_id and time using get_matching_posts_with_tagged_users",
 ]
 
 summarize_agent = client.agents.create(
@@ -219,7 +219,7 @@ session = client.sessions.create(
 )
 
 while True:
-    user_input = input("Good Afternoon good sir, what do you want to know about today?\n")
+    user_input = input("Good Afternoon good sir, would you like some tea?\n")
     if user_input == "exit":
         break
     outputs = []
@@ -257,3 +257,4 @@ while True:
             remember=True,
         )
     print(response.response[0][0].content)
+    print("\n\n")
