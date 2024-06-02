@@ -34,9 +34,9 @@ def get_matching_posts_with_tagged_users(user_id: str, time: str = "-7 days"):
     query = f"""
     SELECT 'analysis: ' || analysis, 'at: ' || l.name, 'alongwith: ' || UT.full_name as friends
     FROM POSTS
-         JOIN main.LOCATIONS L on POSTS.location = L.id
-         JOIN main.TAGGED_USERS TU on POSTS.post_id = TU.post_id
-        JOIN main.USER UT on TU.user_id = POSTS.user_id
+         JOIN LOCATIONS L on POSTS.location = L.id
+         JOIN TAGGED_USERS TU on POSTS.post_id = TU.post_id
+         JOIN USER UT on UT.id = TU.user_id
     and timestamp >= datetime('now', '{time}')
     and POSTS.user_id = '{user_id}';    """
     cursor.execute(query)
