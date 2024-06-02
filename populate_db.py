@@ -60,6 +60,7 @@ class Database():
             print(COMMAND)
             self.cursor.execute(COMMAND)
             self.db_connection.commit()
+            return location.pk
         except Exception as e:
             print("Skipping adding to location table due to issue: e")
 
@@ -185,7 +186,12 @@ class Instagram():
             for sno, resource in enumerate(post.resources):
                 self.database.save_media(resource.thumbnail_url, username, f"{post.pk}_{sno}")
 
-            post.location = self.database.insert_into_location_table(post.location) if post.location else None
+            if post.location:
+                post.location = self.database.insert_into_location_table(post.location)
+            else:
+                post.location = None
+            
+            post.com
             post = post.__dict__
             post.update({"user_pk": user.id})
             post.update({"media_path": media_path})
@@ -222,7 +228,7 @@ def main():
 
     # Fetch friends list from Instagram and limit to 1 friend
     friends = insta.get_friends(from_database=True)
-    print(friends)
+
     # for friend in friends:
     #     insta.get_user_posts(friend, limit=5)
     #     print(friend)
