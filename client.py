@@ -55,7 +55,7 @@ def get_users_from_keyword(keyword):
     conn = sqlite3.connect('karani.db')
     cursor = conn.cursor()
     query = f"""
-        SELECT U.full_name, P.* from POSTS P JOIN USER U on U.id = P.user_id where P.analysis LIKE '%{keyword}%';
+        SELECT U.full_name, P.analysis from POSTS P JOIN USER U on U.id = P.user_id where P.analysis LIKE '%{keyword}%';
     """
     cursor.execute(query)
     rows = cursor.fetchall()
@@ -89,7 +89,7 @@ def get_users_from_keyword(keyword):
 
 
 def summarize(big_string: str, query: str):
-    res = summarize_agent.sessions.chat(
+    res = client.sessions.chat(
         session_id=summarize_session.id,
         messages=[
             {
@@ -125,13 +125,13 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_users_from_keyword",
-            "description": "Extracts the most important keyword from the query string and searches for that keyword in the analysis column of the database",
+            "description": "Searches all users posts for the provided keyword and returns the users and their posts.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "keyword": {
                         "type": "string",
-                        "description": "The query to be displayed to the user to get the input.",
+                        "description": "The keyword to search for in the analysis column of the database.",
                     },
                 },
                 "required": ["keyword"]
