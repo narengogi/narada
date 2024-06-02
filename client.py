@@ -205,6 +205,7 @@ TOOLS = [
 
 INSTRUCTIONS = [
     "If you want to get user_id for a user name, invoke get_matching_users with the user name",
+    "Keep using the tools till you get to the answer",
 ]
 
 summarize_agent = client.agents.create(
