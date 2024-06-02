@@ -28,17 +28,25 @@ session = client.sessions.create(
 )
 
 prompt = """
-Your task is to analyse the provided image and respond with the following json:
-```json{
-    "description": "describe whats going on in the photo in under 3 lines"
-    "vibe": "HAPPY/CHEERFUL/MOODY/SAD/ANGRY/DEPRESSION"
-}```
+Your task is to analyse the provided image and summarize the photo in less than 150 words:
+1. If there are people in the photo, describe their emotions, actions, and interactions.
+2. If there are objects in the photo, describe their appearance, location, and purpose.
+3. If there are any text in the photo, describe its content and relevance.
+4. If there are any animals in the photo, describe their species, actions, and interactions.
+5. If there are any landmarks in the photo, describe their appearance, location, and significance.
+6. If there are any other elements in the photo, describe their appearance, location, and relevance.
+7. If the photo is a meme, describe its content, humor, and relevance.
+8. If the photo is a screenshot, describe its content, context, and relevance.
+9. If the photo is a selfie, describe the person's appearance, expression, and context.
+10. If the photo is a landscape, describe the location, weather, and significance.
 """
 
 res = cur.execute(UNPROCESSED_ROWS)
 
 for row in res.fetchall():
     post_id, media = row
+    if "." not in media.rsplit("/")[-1]:
+        continue
     base64_image = base64.b64encode(open("/Users/narendranathchoudharygogineni/Documents/personal/narada/" + media, "rb").read()).decode("utf-8")
     res = client.sessions.chat(
         session_id=session.id,

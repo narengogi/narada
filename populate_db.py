@@ -179,7 +179,7 @@ class Instagram():
             try:
                 media_path = str(self.database.save_media(post.thumbnail_url, username, post.pk))
             except Exception as e:
-                media_path = f"storage/{username}/{post.pk}"
+                media_path = f"ge/{username}/{post.pk}"
 
             
             for sno, resource in enumerate(post.resources):

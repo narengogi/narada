@@ -10,7 +10,8 @@ conn = sqlite3.connect('karani.db')
 
 
 def get_matching_users(user_name: str):
-    cursor = conn.cursor()
+    connec = sqlite3.connect('karani.db')
+    cursor = connec.cursor()
     query = f"""
     SELECT * FROM "main"."USER" WHERE username LIKE '%{user_name}%';
     """
@@ -23,14 +24,41 @@ def get_matching_users(user_name: str):
         result_lines.append(line)
 
     all_results = '\n'.join(result_lines)
+    connec.close()
+    return all_results
+
+
+def get_matching_posts_with_tagged_users(user_id: str, time: str = "-7 days"):
+    connec = sqlite3.connect('karani.db')
+    cursor = connec.cursor()
+    query = f"""
+    SELECT 'analysis: ' || analysis, 'at: ' || l.name, 'alongwith: ' || UT.full_name as friends
+    FROM POSTS
+         JOIN main.LOCATIONS L on POSTS.location = L.id
+         JOIN main.TAGGED_USERS TU on POSTS.post_id = TU.post_id
+        JOIN main.USER UT on TU.user_id = POSTS.user_id
+    and timestamp >= datetime('now', '{time}')
+    and POSTS.user_id = '{user_id}';    """
+    cursor.execute(query)
+    rows = cursor.fetchall()
+
+    result_lines = []
+    for row in rows:
+        line = ', '.join(str(item) for item in row)
+        result_lines.append(line)
+
+    all_results = '\n'.join(result_lines)
+    connec.close()
     return all_results
 
 
 def get_matching_posts(time: str = "-7 days", user_id: str = None):
     cursor = conn.cursor()
     query = f"""
-    SELECT group_concat(analysis, ', ') AS analyses FROM "main"."POSTS" WHERE timestamp >= datetime('now', '{time}') and user_id = '{user_id}';
-    """
+    SELECT analysis, l.name
+    FROM POSTS JOIN main.LOCATIONS L on POSTS.location = L.id
+    and timestamp >= datetime('now', '{time}')
+    and user_id = '{user_id}';    """
     cursor.execute(query)
     rows = cursor.fetchall()
 
@@ -151,11 +179,32 @@ TOOLS = [
                 "required": ["time", "user_id"]
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_matching_posts_with_tagged_users",
+            "description": "Gets the matching posts alongwith tagged users matching the provided user id and time. Use it when you want to see who the user is tagging in their posts, or hanging out with.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "user_id": {
+                        "type": "string",
+                        "description": "The user id to be used to get the tagged users.",
+                    },
+                    "time": {
+                        "type": "string",
+                        "description": "The time to be used to get the tagged users. This is sqlite date comparator like '-7 days.'",
+                    },
+                },
+                "required": ["user_id", "time"]
+            }
+        }
     }
 ]
 
 INSTRUCTIONS = [
-    ""
+    "If you want to get user_id for a user name, invoke get_matching_users with the user name",
 ]
 
 summarize_agent = client.agents.create(
@@ -188,7 +237,6 @@ session = client.sessions.create(
     situation="Answer the questions asked by the user",
     metadata={"agent": "Question Answerer"},
 )
-
 
 while True:
     user_input = input("Good Afternoon good sir, what do you want to know about today?\n")
