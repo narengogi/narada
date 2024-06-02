@@ -44,42 +44,46 @@ Your task is to analyse the provided image and summarize the photo in less than 
 res = cur.execute(UNPROCESSED_ROWS)
 
 for row in res.fetchall():
-    post_id, media = row
-    if "." not in media.rsplit("/")[-1]:
+    try:
+        post_id, media = row
+        if "." not in media.rsplit("/")[-1]:
+            continue
+        base64_image = base64.b64encode(open("/Users/narendranathchoudharygogineni/Documents/personal/narada/" + media, "rb").read()).decode("utf-8")
+        res = client.sessions.chat(
+            session_id=session.id,
+            messages=[
+                {
+                  "role": "system",
+                  "content": [
+                      {
+                          "type": "text",
+                          "text": prompt
+                      }
+                  ]
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{base64_image}"
+                            },
+                        }
+                    ],
+                }
+            ],
+            max_tokens=1024,
+            remember=False
+        )
+        content = res.response[0][0].content.replace("```json", "")
+        content = content.replace("```", "")
+        content = content.replace("'", "")
+        print(content)
+        cur.execute(f"""UPDATE "main"."POSTS" set analysis = '{content}' where post_id = '{post_id}'""")
+        con.commit()
+    except Exception as e:
+        print(e)
         continue
-    base64_image = base64.b64encode(open("/Users/narendranathchoudharygogineni/Documents/personal/narada/" + media, "rb").read()).decode("utf-8")
-    res = client.sessions.chat(
-        session_id=session.id,
-        messages=[
-            {
-              "role": "system",
-              "content": [
-                  {
-                      "type": "text",
-                      "text": prompt
-                  }
-              ]
-            },
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{base64_image}"
-                        },
-                    }
-                ],
-            }
-        ],
-        max_tokens=1024,
-        remember=False
-    )
-    content = res.response[0][0].content.replace("```json", "")
-    content = content.replace("```", "")
-    content = content.replace("'", "")
-    print(content)
-    cur.execute(f"""UPDATE "main"."POSTS" set analysis = '{content}' where post_id = '{post_id}'""")
-    con.commit()
     # time.sleep(1000)
 

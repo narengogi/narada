@@ -13,7 +13,7 @@ def get_matching_users(user_name: str):
     connec = sqlite3.connect('karani.db')
     cursor = connec.cursor()
     query = f"""
-    SELECT * FROM "main"."USER" WHERE username LIKE '%{user_name}%';
+    SELECT * FROM USER WHERE username LIKE '%{user_name}%';
     """
     cursor.execute(query)
     rows = cursor.fetchall()
@@ -52,23 +52,23 @@ def get_matching_posts_with_tagged_users(user_id: str, time: str = "-7 days"):
     return all_results
 
 
-def get_matching_posts(time: str = "-7 days", user_id: str = None):
-    cursor = conn.cursor()
-    query = f"""
-    SELECT analysis, l.name
-    FROM POSTS JOIN main.LOCATIONS L on POSTS.location = L.id
-    and timestamp >= datetime('now', '{time}')
-    and user_id = '{user_id}';    """
-    cursor.execute(query)
-    rows = cursor.fetchall()
-
-    result_lines = []
-    for row in rows:
-        line = ', '.join(str(item) for item in row)
-        result_lines.append(line)
-
-    all_results = '\n'.join(result_lines)
-    return all_results
+# def get_matching_posts(time: str = "-7 days", user_id: str = None):
+#     cursor = conn.cursor()
+#     query = f"""
+#     SELECT analysis, l.name
+#     FROM POSTS JOIN main.LOCATIONS L on POSTS.location = L.id
+#     and timestamp >= datetime('now', '{time}')
+#     and user_id = '{user_id}';    """
+#     cursor.execute(query)
+#     rows = cursor.fetchall()
+#
+#     result_lines = []
+#     for row in rows:
+#         line = ', '.join(str(item) for item in row)
+#         result_lines.append(line)
+#
+#     all_results = '\n'.join(result_lines)
+#     return all_results
 
 
 def summarize(big_string: str, query: str):
@@ -162,27 +162,6 @@ TOOLS = [
     {
         "type": "function",
         "function": {
-            "name": "get_matching_posts",
-            "description": "Gets the posts matching the provided time and user id. To get matching users you can invoke get_matching_users",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "time": {
-                        "type": "string",
-                        "description": "The time to be used to get the matching posts. This is sqlite date comparator like '-7 days.'",
-                    },
-                    "user_id": {
-                        "type": "string",
-                        "description": "The user id to be used to get the matching posts.",
-                    },
-                },
-                "required": ["time", "user_id"]
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
             "name": "get_matching_posts_with_tagged_users",
             "description": "Gets the matching posts alongwith tagged users matching the provided user id and time. Use it when you want to see who the user is tagging in their posts, or hanging out with.",
             "parameters": {
@@ -211,7 +190,7 @@ INSTRUCTIONS = [
 summarize_agent = client.agents.create(
     name="Summarizer",
     about="Summarizes the provided text for the provided query",
-    model="gpt-3.5-turbo",
+    model="gpt-4o",
     metadata={"name": "Summarizer"}
 )
 
@@ -227,7 +206,7 @@ agent = client.agents.create(
     Answers the questions asked by the user using the tools it has, if it requires more data, it will ask the user for it.
     Always invoke the summarize() tool at the end to summarize the data for the user.
     """,
-    model="gpt-3.5-turbo",
+    model="gpt-4o",
     metadata={"name": "Question Answerer"},
     tools=TOOLS,
     instructions=INSTRUCTIONS
