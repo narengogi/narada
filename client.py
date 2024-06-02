@@ -247,13 +247,12 @@ agent = client.agents.create(
     instructions=INSTRUCTIONS
 )
 
-session = client.sessions.create(
-    agent_id=agent.id,
-    situation="Answer the questions asked by the user",
-    metadata={"agent": "Question Answerer"},
-)
-
 while True:
+    session = client.sessions.create(
+        agent_id=agent.id,
+        situation="Answer the questions asked by the user",
+        metadata={"agent": "Question Answerer"},
+    )
     user_input = input("Good Afternoon good sir, would you like some tea?\n")
     if user_input == "exit":
         break
@@ -291,5 +290,6 @@ while True:
             recall=True,
             remember=True,
         )
+
     print(response.response[0][0].content)
     print("\n\n")
