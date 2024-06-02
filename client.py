@@ -51,6 +51,23 @@ def get_matching_posts_with_tagged_users(user_id: str, time: str = "-7 days"):
     connec.close()
     return all_results
 
+def get_users_from_keyword(keyword):
+    conn = sqlite3.connect('karani.db')
+    cursor = conn.cursor()
+    query = f"""
+        SELECT U.full_name, P.* from POSTS P JOIN USER U on U.id = P.user_id where P.analysis LIKE '%{keyword}%';
+    """
+    cursor.execute(query)
+    rows = cursor.fetchall()
+
+    result_lines = []
+    for row in rows:
+        line = ', '.join(str(item) for item in row)
+        result_lines.append(line)
+
+    all_results = '\n'.join(result_lines)
+    return all_results
+
 
 # def get_matching_posts(time: str = "-7 days", user_id: str = None):
 #     cursor = conn.cursor()
@@ -104,6 +121,23 @@ def take_user_input(query: str):
 
 
 TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_users_from_keyword",
+            "description": "Extracts the most important keyword from the query string and searches for that keyword in the analysis column of the database",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "keyword": {
+                        "type": "string",
+                        "description": "The query to be displayed to the user to get the input.",
+                    },
+                },
+                "required": ["keyword"]
+            }
+        }
+    },
     {
         "type": "function",
         "function": {
@@ -185,6 +219,7 @@ TOOLS = [
 INSTRUCTIONS = [
     "If you want to get user_id for a user name, invoke get_matching_users with the user name",
     "After getting the user_id get the relevant posts for the user_id and time using get_matching_posts_with_tagged_users",
+    "If a random question is provided, figure out the most appropriate keyword in the query and get the relevant posts and summarise the analyses by calling get_users_from_keyword"
 ]
 
 summarize_agent = client.agents.create(
