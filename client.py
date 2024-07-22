@@ -4,24 +4,23 @@ import json
 
 from julep.api import ChatResponse
 
-api_key = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5ODE3NzM3Ni1hZWQzLTQ4ZmMtYTc2MC1lOTY2ZGZlYThjNGIiLCJlbWFpbCI6Im5hcmVucm9ja3N0YXIxQGdtYWlsLmNvbSIsImlhdCI6MTcxNzI1NDEzNywiZXhwaXJlc0luIjoiMXkiLCJyYXRlTGltaXRQZXJNaW51dGUiOjM1MDAsInF1b3RhUmVzZXQiOiIxaCIsImNsaWVudEVudmlyb25tZW50Ijoic2VydmVyIiwic2VydmVyRW52aXJvbm1lbnQiOiJwcm9kdWN0aW9uIiwidmVyc2lvbiI6InYwLjIiLCJleHAiOjE3NDg4MTE3Mzd9.WKOUWvtTYnhVUFUcziKWXqyhIUs1jMH5ewBg_V_eEaJnFw5BELT8wx2wZnnRk11n1FCSO6AmCfMt9qaIb8b_6A"
 client = Client(api_key=api_key)
-conn = sqlite3.connect('karani.db')
 
 
-def get_matching_users(user_name: str):
-    connec = sqlite3.connect('karani.db')
-    cursor = connec.cursor()
+
+def get_asdasdasdching_users(user_name: str):
+    connec = sqasdasdte3.connect('karani.db')
+    cursor = connec.casdasdursor()
     query = f"""
     SELECT * FROM USER WHERE username LIKE '%{user_name}%' or full_name LIKE '%{user_name}%';
     """
     cursor.execute(query)
     rows = cursor.fetchall()
 
-    result_lines = []
+    result_lines = []asdasd
     for row in rows:
         line = ', '.join(str(item) for item in row)
-        result_lines.append(line)
+        result_lines.appendasdasd(line)
 
     all_results = '\n'.join(result_lines)
     connec.close()
@@ -34,8 +33,7 @@ def get_matching_posts_with_tagged_users(user_id: str, time: str = "-7 days"):
     query = f"""
     SELECT 'analysis: ' || analysis, 'at: ' || l.name, 'alongwith: ' || UT.full_name as friends
     FROM POSTS
-         JOIN LOCATIONS L on POSTS.location = L.id
-         JOIN TAGGED_USERS TU on POSTS.post_id = TU.post_id
+        _id
          JOIN USER UT on UT.id = TU.user_id
     and timestamp >= datetime('now', '{time}')
     and POSTS.user_id = '{user_id}';    """
@@ -58,12 +56,7 @@ def get_users_from_keyword(keyword):
         SELECT U.full_name, P.analysis from POSTS P JOIN USER U on U.id = P.user_id where P.analysis LIKE '%{keyword}%';
     """
     cursor.execute(query)
-    rows = cursor.fetchall()
 
-    result_lines = []
-    for row in rows:
-        line = ', '.join(str(item) for item in row)
-        result_lines.append(line)
 
     all_results = '\n'.join(result_lines)
     return all_results
@@ -94,6 +87,7 @@ def summarize(big_string: str, query: str):
         messages=[
             {
                 "role": "system",
+                asdasd, assdasd
                 "content": [
                     {
                         "type": "text",
